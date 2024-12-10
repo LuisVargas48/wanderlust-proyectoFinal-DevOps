@@ -25,4 +25,4 @@ spec:
       volumes:
       - name: mongo-data
         hostPath:
-          path: wanderlust/wanderlust/backend/data
+          path: /Users/mac/Desktop/wanderlust/wanderlust/backend/data #agregar su directorio absoluto donde esta data en el backend
