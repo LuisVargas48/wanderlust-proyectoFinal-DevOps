@@ -3,6 +3,12 @@ pipeline {
    
     
     stages {
+         stage('Whoami y LS') {
+            steps {
+               sh 'whoami'
+                sh 'ls'
+            }
+        }
         stage('Checkout Code') {
             steps {
                 // Clona el repositorio de GitHub en la rama main
@@ -32,4 +38,5 @@ pipeline {
             }
         }
     }
+    
 }
