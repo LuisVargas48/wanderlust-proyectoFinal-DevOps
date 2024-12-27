@@ -9,24 +9,27 @@ pipeline {
             }
         }
         stage('Install kubectl') {
-            steps {
-                script {
-                    sh '''
-                        echo "Checking if kubectl exists..."
-                        if [ ! -f $WORKSPACE/kubectl ]; then
-                            echo "Downloading kubectl..."
-                            curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.31.0/bin/linux/amd64/kubectl
-                            chmod +x kubectl
-                            mv kubectl $WORKSPACE/kubectl
-                        else
-                            echo "kubectl already exists in $WORKSPACE"
-                        fi
-                        echo "Adding kubectl to PATH..."
-                        export PATH=$WORKSPACE:$PATH
-                    '''
-                }
-            }
+    steps {
+        script {
+            sh '''
+                echo "Checking if kubectl exists..."
+                if [ ! -f $WORKSPACE/kubectl ]; then
+                    echo "Downloading kubectl..."
+                    curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.31.0/bin/linux/amd64/kubectl
+                    chmod +x kubectl
+                    mv kubectl $WORKSPACE/kubectl
+                else
+                    echo "kubectl already exists in $WORKSPACE"
+                fi
+                echo "Adding kubectl to PATH..."
+                export PATH=$WORKSPACE:$PATH
+                echo "Verifying kubectl installation..."
+                kubectl version --client
+            '''
         }
+    }
+}
+
         stage('Checkout Code') {
             steps {
                 git branch: 'main', url: 'https://github.com/LuisVargas48/kubernetes-FUNCIONAL'
