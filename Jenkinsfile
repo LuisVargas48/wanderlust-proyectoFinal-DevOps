@@ -1,17 +1,34 @@
 pipeline {
     agent any
-   
-    
+
     stages {
-         stage('Whoami y LS') {
+        stage('Whoami y LS') {
             steps {
-               sh 'whoami'
+                sh 'whoami'
                 sh 'ls'
+            }
+        }
+        stage('Install kubectl') {
+            steps {
+                script {
+                    sh '''
+                        echo "Checking if kubectl exists..."
+                        if [ ! -f $WORKSPACE/kubectl ]; then
+                            echo "Downloading kubectl..."
+                            curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.31.0/bin/linux/amd64/kubectl
+                            chmod +x kubectl
+                            mv kubectl $WORKSPACE/kubectl
+                        else
+                            echo "kubectl already exists in $WORKSPACE"
+                        fi
+                        echo "Adding kubectl to PATH..."
+                        export PATH=$WORKSPACE:$PATH
+                    '''
+                }
             }
         }
         stage('Checkout Code') {
             steps {
-                // Clona el repositorio de GitHub en la rama main
                 git branch: 'main', url: 'https://github.com/LuisVargas48/kubernetes-FUNCIONAL'
             }
         }
@@ -38,5 +55,4 @@ pipeline {
             }
         }
     }
-    
 }
