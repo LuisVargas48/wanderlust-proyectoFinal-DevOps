@@ -14,12 +14,12 @@ pipeline {
                 sh 'ls'
             }
         }
-
+        //se instala kubectl para mayor manejo
         stage('Install kubectl') {
             steps {
                 script {
                     sh '''
-                        echo "Checking if kubectl exists..."
+                        echo "Checking if kubectl exists..." 
                         if [ ! -f $KUBECTL_PATH ]; then
                             echo "Downloading kubectl..."
                             curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.31.0/bin/linux/amd64/kubectl
