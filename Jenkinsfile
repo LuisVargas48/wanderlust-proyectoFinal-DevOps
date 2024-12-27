@@ -1,6 +1,6 @@
 pipeline {
     agent any
-    
+
     stages {
         stage('Whoami y LS') {
             steps {
@@ -8,48 +8,44 @@ pipeline {
                 sh 'ls'
             }
         }
-        
         stage('Install kubectl') {
             steps {
                 script {
-                    // Instalar kubectl
                     sh '''
-                    curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
-                    chmod +x kubectl
-                    mv kubectl /usr/local/bin/
+                        echo "Downloading kubectl..."
+                        curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.31.0/bin/linux/amd64/kubectl
+                        chmod +x kubectl
+                        mv kubectl $WORKSPACE/kubectl
+                        echo "Adding kubectl to PATH..."
+                        export PATH=$WORKSPACE:$PATH
                     '''
                 }
             }
         }
-        
         stage('Checkout Code') {
             steps {
-                // Clona el repositorio de GitHub en la rama main
                 git branch: 'main', url: 'https://github.com/LuisVargas48/kubernetes-FUNCIONAL'
             }
         }
-        
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    // Asegúrate de que kubectl esté configurado en tu máquina Jenkins o que tenga acceso al clúster
-                    // Aplica los manifiestos YAML para el backend, frontend, MongoDB y Redis
-                    
-                    sh 'kubectl apply -f Kubernetes/frontend/frontend-deployment.yml'
-                    sh 'kubectl apply -f Kubernetes/frontend/frontend-service.yml'
-                    
-                    sh 'kubectl apply -f Kubernetes/mongo/mongo-deployment.yml'
-                    sh 'kubectl apply -f Kubernetes/mongo/mongo-service.yml'
-                    sh "kubectl apply -f Kubernetes/mongo/configmap/mongo-data.yml"
-                    
-                    sh 'kubectl apply -f Kubernetes/redis/redis-deployment.yml'
-                    sh 'kubectl apply -f Kubernetes/redis/redis-service.yml'
-
-                    sh 'kubectl apply -f Kubernetes/backend/backend-deployment.yml '
-                    sh 'kubectl apply -f Kubernetes/backend/backend-service.yml'
+                    sh '''
+                        echo "Setting PATH for kubectl..."
+                        export PATH=$WORKSPACE:$PATH
+                        echo "Deploying to Kubernetes..."
+                        kubectl apply -f Kubernetes/frontend/frontend-deployment.yml
+                        kubectl apply -f Kubernetes/frontend/frontend-service.yml
+                        kubectl apply -f Kubernetes/mongo/mongo-deployment.yml
+                        kubectl apply -f Kubernetes/mongo/mongo-service.yml
+                        kubectl apply -f Kubernetes/mongo/configmap/mongo-data.yml
+                        kubectl apply -f Kubernetes/redis/redis-deployment.yml
+                        kubectl apply -f Kubernetes/redis/redis-service.yml
+                        kubectl apply -f Kubernetes/backend/backend-deployment.yml
+                        kubectl apply -f Kubernetes/backend/backend-service.yml
+                    '''
                 }
             }
         }
     }
 }
-
