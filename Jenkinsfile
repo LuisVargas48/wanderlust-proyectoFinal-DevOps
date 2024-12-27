@@ -54,7 +54,7 @@ pipeline {
                     sh 'kubectl apply -f Kubernetes/mongo/mongo-deployment.yml'
                     sh 'kubectl apply -f Kubernetes/mongo/mongo-service.yml'
                     sh 'kubectl delete configmap mongo-data --ignore-not-found'
-                    sh "kubectl replace -f Kubernetes/mongo/configmap/mongo-data.yml"
+                    sh "kubectl apply -f Kubernetes/mongo/configmap/mongo-data.yml"
                     
                     sh 'kubectl apply -f Kubernetes/redis/redis-deployment.yml'
                     sh 'kubectl apply -f Kubernetes/redis/redis-service.yml'
