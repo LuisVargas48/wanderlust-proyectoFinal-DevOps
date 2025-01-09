@@ -36,7 +36,7 @@ pipeline {
 
         stage('Checkout Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/LuisVargas48/kubernetes-FUNCIONAL'
+                git branch: 'main', url: 'https://github.com/LuisVargas48/wanderlust-proyectoFinal-DevOps'
             }
         }
 
