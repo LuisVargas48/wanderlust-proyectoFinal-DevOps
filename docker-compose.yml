@@ -1,0 +1,43 @@
+version: "3.7"
+services:
+  app:
+    build: ./frontend
+    environment:
+      - VITE_API_PATH="http://api:8080"
+    ports:
+    - "3000:3000"
+    networks:
+      - frontend
+  api:
+    build: ./backend
+    env_file:
+      - path: ./backend/.env
+    environment:
+      - MONGODB_URI=mongodb://mongo/wanderlust
+      - REDIS_URL=redis://redis:6379
+      - FRONTEND_URL=http://app:5173
+      - BACKEND_URL=http://api:8080
+    ports:
+      - "8080:8080"
+    depends_on:
+    - mongo
+    - redis
+    networks:
+      - frontend
+      - backend
+  redis:
+    image: redis
+    networks:
+      - backend
+  mongo:
+    image: mongo
+    networks:
+      - backend
+    volumes:
+     - ./backend/data:/docker-entrypoint-initdb.d
+
+networks:
+  frontend: 
+   driver: bridge
+  backend: 
+   driver: bridge
