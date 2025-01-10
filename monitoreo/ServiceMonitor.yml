@@ -1,0 +1,12 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: prometheus-prometheus-node-exporter-qzdkm 
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      k8s-app: node-exporter
+  endpoints:
+    - port: metrics
+      interval: 15s
