@@ -1,42 +1,58 @@
 pipeline {
-    agent any
-
-    environment {
-        // Definir la ruta de kubectl en el entorno global
-        KUBECTL_PATH = "${WORKSPACE}/kubectl"
-        PATH = "${WORKSPACE}:${env.PATH}"
+    agent {
+         kubernetes {
+            namespace 'jenkins'
+            defaultContainer 'kubectl'
+            yaml """
+            apiVersion: v1
+            kind: Pod
+            spec:
+                containers:
+                - name: kubectl
+                  image: bitnami/kubectl:1.32-debian-12
+                  command:
+                   - "/bin/sh"
+                  tty: true
+                  securityContext:
+                    runAsUser: 0
+                  volumeMounts:
+                    - name: config
+                      mountPath: /.kube/
+                restartPolicy: Never
+                volumes:
+                - name: config
+                  secret:
+                    secretName: kubeconfig-secret
+                    items:
+                    - key: kubeconfig
+                      path: config
+            """
+        }
     }
 
-    stages {
-        stage('Whoami y LS') {
-            steps {
-                sh 'whoami'
-                sh 'ls'
-            }
-        }
-        //se instala kubectl para mayor manejo
-        stage('Install kubectl') {
-            steps {
-                script {
-                    sh '''
-                        echo "Checking if kubectl exists..." 
-                        if [ ! -f $KUBECTL_PATH ]; then
-                            echo "Downloading kubectl..."
-                            curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.31.0/bin/linux/amd64/kubectl
-                            chmod +x kubectl
-                            mv kubectl $KUBECTL_PATH
-                        else
-                            echo "kubectl already exists in $KUBECTL_PATH"
-                        fi
-                        echo "Adding kubectl to PATH..."
-                    '''
-                }
-            }
-        }
+    stages{
 
         stage('Checkout Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/LuisVargas48/wanderlust-proyectoFinal-DevOps'
+                git branch: 'main', url: 'https://github.com/LuisVargas48/kubernetes-FUNCIONAL'
+            }
+        }
+
+        stage('Setting ConfigMap to MongoDB') {
+            steps {
+                script {
+                    IS_CONFIGMAP_MONGO_DATA_EXISTS=sh(
+                        script: 'kubectl get configmap -n default -o jsonpath="{range .items[?(@.metadata.name == \\"mongo-data\\")]}{.metadata.name}{end}"',
+                        returnStdout: true
+                    ).trim()
+                    
+                    if (IS_CONFIGMAP_MONGO_DATA_EXISTS == 'mongo-data') {
+                        echo 'ConfigMap mongo-data already exists'
+                    } else {
+                        echo 'Creating ConfigMap mongo-data'
+                        sh "kubectl apply -f Kubernetes/mongo/configmap/mongo-data.yml"
+                    }
+                }
             }
         }
 
@@ -48,20 +64,20 @@ pipeline {
                     sh 'kubectl version --client'
                     
                     // Aplicar los manifiestos YAML para el despliegue
-                    sh 'kubectl apply -f Kubernetes/frontend/frontend-deployment.yml'
-                    sh 'kubectl apply -f Kubernetes/frontend/frontend-service.yml'
+                    sh 'kubectl apply -f Kubernetes/frontend/frontend-deployment.yml -n default'
+                    sh 'kubectl apply -f Kubernetes/frontend/frontend-service.yml -n default'
                     
-                    sh 'kubectl apply -f Kubernetes/mongo/mongo-deployment.yml'
-                    sh 'kubectl apply -f Kubernetes/mongo/mongo-service.yml'
-                    sh "kubectl apply -f Kubernetes/mongo/configmap/mongo-data.yml --force"
+                    sh 'kubectl apply -f Kubernetes/mongo/mongo-deployment.yml -n default'
+                    sh 'kubectl apply -f Kubernetes/mongo/mongo-service.yml -n default'
                     
-                    sh 'kubectl apply -f Kubernetes/redis/redis-deployment.yml'
-                    sh 'kubectl apply -f Kubernetes/redis/redis-service.yml'
+                    sh 'kubectl apply -f Kubernetes/redis/redis-deployment.yml -n default'
+                    sh 'kubectl apply -f Kubernetes/redis/redis-service.yml -n default'
 
-                    sh 'kubectl apply -f Kubernetes/backend/backend-deployment.yml'
-                    sh 'kubectl apply -f Kubernetes/backend/backend-service.yml'
+                    sh 'kubectl apply -f Kubernetes/backend/backend-deployment.yml -n default'
+                    sh 'kubectl apply -f Kubernetes/backend/backend-service.yml -n default'
                 }
             }
         }
     }
+
 }
